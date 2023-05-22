@@ -32,7 +32,7 @@ class main_class(commands.Bot):
         for filename in os.listdir("cogs"):
             if os.path.isfile(os.path.join("cogs", filename)):
                 try:
-                    if filename.endswith(".py") and filename not in blacklist:
+                    if filename.endswith(".py") and filename:
                         await self.load_extension(f"cogs.{filename[:-3]}")
                         print(f"Loaded: {filename}")
                 except Exception as e:
@@ -49,7 +49,7 @@ class main_class(commands.Bot):
         # loaded cache which we may not have at this point.
         on_ready_embed = discord.Embed(
             title="Starting Shift",
-            description="Starting Patrol",
+            description="Clocking in",
             color=0x8EE6DD,
         )
         await channel.send(embed=on_ready_embed)

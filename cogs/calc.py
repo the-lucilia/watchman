@@ -52,7 +52,7 @@ class Calculator(commands.Cog):
     @commands.command()
     async def DelBan(self, ctx, t_current: int, current: int, t_endorsements: int, endorsements: int):
         """Target's Current Influence, Delegate's Current Influence, Target's Endorsements, Delegate's Endorsements.
-        Calculates the amout of days needed before a regional delegate can ban a target nation."""
+        Calculates the amount of days needed before a regional delegate can ban a target nation."""
         days = (t_current - 2 * current) / (-2 * t_endorsements + 4 * endorsements + 2)
         answer = await AnswerEmbed(f"The amount of days for the BCRO to ban the target nation is {days}.")
         await ctx.send(embed=answer)

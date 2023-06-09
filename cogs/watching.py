@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands, tasks
 from xml.etree import ElementTree as ET
 import aiohttp
-
+import calc_funcs as ca
 
 async def EndoCounts(nation: str):
     async with aiohttp.ClientSession() as session:
@@ -47,7 +47,7 @@ class Watching(commands.Cog):
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 url="https://www.nationstates.net/cgi-bin/api.cgi?region=greater_sahara"
-                "&q=officers+delegate+numnations",
+                "&q=officers+delegate+numnations+numwanations",
                 headers={
                     "User-Agent": "Watchman accessing region information, devved by Hesskin Empire"
                 },
@@ -56,6 +56,7 @@ class Watching(commands.Cog):
                 region_info = {
                     "Number of Nations": raw_region_info.find("NUMNATIONS").text,
                     "Delegate": raw_region_info.find("DELEGATE").text,
+                    "Number of WA Nations": raw_region_info.find("NUMWANATIONS").text,
                 }
                 try:
                     res_dif = int(self.old_nation_count) - int(
@@ -77,10 +78,34 @@ class Watching(commands.Cog):
                         endo_dif *= int(-1)
                         endo_sign = "+"
 
+                    NumNat = int(region_info['Number of Nations'])
+                    NumWA = int(region_info['Number of WA Nations'])
+                    NumNonWA = NumNat - NumWA
+
+                    strongholdCost = ca.StrongholdCalc(NumWA, NumNonWA)
+
+                    async with aiohttp.ClientSession() as natSession:
+                        async with natSession.get(
+                                url=f"https://www.nationstates.net/cgi-bin/api.cgi?nation={region_info['Delegate']}&q=census+endorsements&mode=score&scale=65",
+                                headers={
+                                    "User-Agent": "Watchman accessing region information, devved by Hesskin Empire"
+                                }
+                        ) as natResponse:
+                            raw_nation_info = ET.fromstring(await natResponse.text())
+                            nation_info = {
+                                "Endorsements": raw_nation_info.find("ENDORSEMENTS").text,
+                                "Influence": raw_nation_info.find("SCORE").text,
+                            }
+
+                    delInfluence = int(nation_info['Influence']) - int(nation_info['Endorsements'])
+
                     region_embed = discord.Embed(
                         title="Greater Sahara",
-                        description=f"Nation Count: {region_info['Number of Nations']} ({res_sign}{res_dif})\n"
-                        f"{region_info['Delegate'].title()} Endos: {endo_count} ({endo_sign}{endo_dif})",
+                        description=f"Nation Count: {NumNat} ({res_sign}{res_dif})\n"
+                        f"{region_info['Delegate'].title()} Endos: {endo_count} ({endo_sign}{endo_dif})\n"
+                        f"Stronghold Cost: {strongholdCost} influence\n"
+                        f"Password Cost: {ca.PasswordCalc(NumNat)}\n"
+                        f"Days to reach stronghold cost: {ca.DayCalc(endo_count, strongholdCost, delInfluence)}"
                     )
 
                     self.old_nation_count = region_info["Number of Nations"]

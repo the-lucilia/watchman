@@ -71,6 +71,18 @@ class Calculator(commands.Cog):
         answer = await AnswerEmbed(f"The stable influence after six months with {endorsements} "
                                    f"endorsements is {stable}.")
         await ctx.send(embed=answer)
+        
+    @commands.command()
+    async def StrongholdCalc(self, ctx, numwa: int, nonwa: int):
+        """WA Nations, Non WA Nations."""
+        if nonwa >= 200:
+            nonwa_cost = 4000
+        else:
+            nonwa_cost = nonwa * 20
+        cost = (numwa * 80) + nonwa_cost
+        answer = await AnswerEmbed(f"The cost for strongholding a region with {numwa} WA Nations and {nonwa} nations"
+                                   f"is {cost} influence.")
+        await ctx.send(embed=answer)
 
 
 async def setup(bot):

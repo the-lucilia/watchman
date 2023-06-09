@@ -2,7 +2,6 @@ import discord
 from discord.ext import commands, tasks
 from xml.etree import ElementTree as ET
 import aiohttp
-import calc_funcs as ca
 
 async def EndoCounts(nation: str):
     async with aiohttp.ClientSession() as session:
@@ -18,6 +17,22 @@ async def EndoCounts(nation: str):
             }
             endo_length = len(nation_info["Endo Count"])
             return endo_length
+
+
+async def StrongholdCalc(self, numwa: int, nonwa: int):
+    if nonwa >= 200:
+        nonwa_cost = 4000
+    else:
+        nonwa_cost = nonwa * 20
+    return (numwa * 80) + nonwa_cost
+
+
+async def PasswordCalc(numnat: int):
+    return numnat * 40
+
+
+async def DayCalc(self, endorsements: int, influence: int, current: int):
+    return (influence - current) / (2 * endorsements + 2)
 
 
 class Watching(commands.Cog):
@@ -82,7 +97,7 @@ class Watching(commands.Cog):
                     NumWA = int(region_info['Number of WA Nations'])
                     NumNonWA = NumNat - NumWA
 
-                    strongholdCost = ca.StrongholdCalc(NumWA, NumNonWA)
+                    strongholdCost = StrongholdCalc(NumWA, NumNonWA)
 
                     async with aiohttp.ClientSession() as natSession:
                         async with natSession.get(
@@ -104,8 +119,8 @@ class Watching(commands.Cog):
                         description=f"Nation Count: {NumNat} ({res_sign}{res_dif})\n"
                         f"{region_info['Delegate'].title()} Endos: {endo_count} ({endo_sign}{endo_dif})\n"
                         f"Stronghold Cost: {strongholdCost} influence\n"
-                        f"Password Cost: {ca.PasswordCalc(NumNat)}\n"
-                        f"Days to reach stronghold cost: {ca.DayCalc(endo_count, strongholdCost, delInfluence)}"
+                        f"Password Cost: {PasswordCalc(NumNat)}\n"
+                        f"Days to reach stronghold cost: {DayCalc(endo_count, strongholdCost, delInfluence)}"
                     )
 
                     self.old_nation_count = region_info["Number of Nations"]
